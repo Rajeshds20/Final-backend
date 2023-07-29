@@ -151,90 +151,81 @@ app.post('/api/registerotp', async (req, res, next) => {
             console.log('User Not found');
             return res.status(400).send('User already exists');
         }
-        client.verify.v2
-            .services(process.env.SERVICE_ID)
-            .verifications
-            .create({
-                to: `+91${phone}`,
-                channel: 'sms'
-            })
-        res.status(200).send('success')
-
+        res.status(200).send('success');
     } catch (error) {
         return res.status(500).send('Login Server Error!');
-
     }
 })
 
-app.post('/api/registerverify', async (req, res) => {
-    try {
-        const { otp, phone } = req.body;
-        console.log(req.body);
-        if (!phone || !otp) {
-            return res.status(422).send('Not valid details')
-        }
-        const userdetails = await Users.findOne({ Phone: phone });
-        if (userdetails) {
-            return res.status(409).send('Already exists');
-        }
-        client
-            .verify.v2
-            .services(SERVICE_ID)
-            .verificationChecks
-            .create({
-                to: `+91${phone}`,
-                code: otp
-            })
-            .then(data => {
-                if (data.status === "approved") {
-                    res.status(200).send('verified');
-                }
-                else {
-                    console.log('here');
-                    return res.status(400).send("Otp not verified successfully !");
-                }
-            })
+// app.post('/api/registerverify', async (req, res) => {
+//     try {
+//         const { otp, phone } = req.body;
+//         console.log(req.body);
+//         if (!phone || !otp) {
+//             return res.status(422).send('Not valid details')
+//         }
+//         const userdetails = await Users.findOne({ Phone: phone });
+//         if (userdetails) {
+//             return res.status(409).send('Already exists');
+//         }
+//         client
+//             .verify.v2
+//             .services(SERVICE_ID)
+//             .verificationChecks
+//             .create({
+//                 to: `+91${phone}`,
+//                 code: otp
+//             })
+//             .then(data => {
+//                 if (data.status === "approved") {
+//                     res.status(200).send('verified');
+//                 }
+//                 else {
+//                     console.log('here');
+//                     return res.status(400).send("Otp not verified successfully !");
+//                 }
+//             })
 
-    } catch (error) {
-        return res.status(500).send('Otp Server Error!');
+//     } catch (error) {
+//         return res.status(500).send('Otp Server Error!');
 
-    }
-})
+//     }
+// })
 
-app.post('/api/forgotverify', async (req, res) => {
-    try {
-        const { otp, phone } = req.body;
-        console.log(req.body);
-        if (!phone || !otp) {
-            return res.status(422).send('Not valid details')
-        }
-        const userdetails = await Users.findOne({ Phone: phone });
-        if (!userdetails) {
-            return res.status(404).send('user not exists');
-        }
-        client
-            .verify.v2
-            .services(SERVICE_ID)
-            .verificationChecks
-            .create({
-                to: `+91${phone}`,
-                code: otp
-            })
-            .then(data => {
-                if (data.status === "approved") {
-                    res.status(200).send('verified');
-                }
-                else {
-                    console.log('here');
-                    return res.status(400).send("Otp not verified successfully !");
-                }
-            })
+// app.post('/api/forgotverify', async (req, res) => {
+//     try {
+//         const { otp, phone } = req.body;
+//         console.log(req.body);
+//         if (!phone || !otp) {
+//             return res.status(422).send('Not valid details')
+//         }
+//         const userdetails = await Users.findOne({ Phone: phone });
+//         if (!userdetails) {
+//             return res.status(404).send('user not exists');
+//         }
+//         client
+//             .verify.v2
+//             .services(SERVICE_ID)
+//             .verificationChecks
+//             .create({
+//                 to: `+91${phone}`,
+//                 code: otp
+//             })
+//             .then(data => {
+//                 if (data.status === "approved") {
+//                     res.status(200).send('verified');
+//                 }
+//                 else {
+//                     console.log('here');
+//                     return res.status(400).send("Otp not verified successfully !");
+//                 }
+//             })
 
-    } catch (error) {
-        return res.status(500).send('Otp Server Error!');
+//     } catch (error) {
+//         return res.status(500).send('Otp Server Error!');
 
-    }
-})
+//     }
+// })
 
 app.post('/api/login', async (req, res, next) => {
     try {
@@ -247,14 +238,18 @@ app.post('/api/login', async (req, res, next) => {
             console.log('User Not found');
             return res.status(404).send('User Not found');
         }
-        client.verify.v2
-            .services(process.env.SERVICE_ID)
-            .verifications
-            .create({
-                to: `+91${phone}`,
-                channel: 'sms'
-            })
-        res.status(200).send('success')
+        const JWT_SECRET_KEY = process.env.JWT_SECRET;
+        jwt.sign(
+            payload,
+            JWT_SECRET_KEY,
+            (err, token) => {
+                if (err) { res.json({ message: err }) }
+                else {
+                    console.log(token);
+                    return res.status(200).json({ userdetails, token })
+                }
+            }
+        )
 
     } catch (error) {
         return res.status(500).send('Login Server Error!');
@@ -262,53 +257,51 @@ app.post('/api/login', async (req, res, next) => {
     }
 })
 
-app.post('/api/verifyOtp', async (req, res) => {
-    try {
-        const { otp, phone } = req.body;
-        const userdetails = await Users.findOne({ Phone: phone });
-        if (!userdetails) {
-            console.log('User Not found');
-            return res.status(404).send('User Not found');
-        }
-        client
-            .verify.v2
-            .services(SERVICE_ID)
-            .verificationChecks
-            .create({
-                to: `+91${phone}`,
-                code: otp
-            })
-            .then(data => {
-                if (data.status === "approved") {
-                    const payload = {
-                        id: userdetails._id,
-                        Name: userdetails.Name
-                    }
-                    const JWT_SECRET_KEY = process.env.JWT_SECRET;
-                    jwt.sign(
-                        payload,
-                        JWT_SECRET_KEY,
-                        (err, token) => {
-                            if (err) { res.json({ message: err }) }
-                            else {
-                                console.log(token);
-                                return res.status(200).json({ userdetails, token })
-                            }
-                        }
+// app.post('/api/verifyOtp', async (req, res) => {
+//     try {
+//         const { otp, phone } = req.body;
+//         const userdetails = await Users.findOne({ Phone: phone });
+//         if (!userdetails) {
+//             console.log('User Not found');
+//             return res.status(404).send('User Not found');
+//         }
+//         client
+//             .verify.v2
+//             .services(SERVICE_ID)
+//             .verificationChecks
+//             .create({
+//                 to: `+91${phone}`,
+//                 code: otp
+//             })
+//             .then(data => {
+//                 if (data.status === "approved") {
+//                     const payload = {
+//                         id: userdetails._id,
+//                         Name: userdetails.Name
+//                     }
+//                     const JWT_SECRET_KEY = process.env.JWT_SECRET;
+//                     jwt.sign(
+//                         payload,
+//                         JWT_SECRET_KEY,
+//                         (err, token) => {
+//                             if (err) { res.json({ message: err }) }
+//                             else {
+//                                 console.log(token);
+//                                 return res.status(200).json({ userdetails, token })
+//                             }
+//                         }
+//                     )
+//                 }
+//                 else {
+//                     console.log('here');
+//                     return res.status(400).send("Otp not verified successfully !");
+//                 }
+//             })
+//     } catch (error) {
+//         return res.status(500).send('Otp Server Error!');
 
-                    )
-                }
-                else {
-                    console.log('here');
-                    return res.status(400).send("Otp not verified successfully !");
-                }
-            })
-
-    } catch (error) {
-        return res.status(500).send('Otp Server Error!');
-
-    }
-})
+//     }
+// })
 
 app.post('/api/emaillogin', async (req, res, next) => {
     try {
