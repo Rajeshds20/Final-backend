@@ -123,7 +123,7 @@ app.post('/api/register', async (req, res, next) => {
                                 Date: new Date(),
                                 Activity: "referral",
                                 Points: 500,
-                                Task: thisuser.Name
+                                Task: thisuser.Phone
                             }
                         }
                     }, {
@@ -134,7 +134,6 @@ app.post('/api/register', async (req, res, next) => {
             }
             res.status(200).send('Succesfully registered.')
         })
-
     } catch (error) {
         res.status(500).send('Register Server Error!');
     }
@@ -1999,12 +1998,17 @@ app.post('/api/contactsuggestion', Authentication, async (req, res) => {
             const a = await Users.findOne({ Phone: Number });
             if (a) {
                 const b = await Friends.findOne({ Sender: a, Receiver: user._id });
-                const c = await Friends.findOne({ Sender: a, Receiver: user._id });
+                const c = await Friends.findOne({ Sender: user._id, Receiver: a });
                 if (!b && !c) {
-                    contactArray.push(a);
+                    if (String(user._id) !== String(a._id)) {
+                        contactArray.push(a);
+                    }
                 }
+
             }
+
         }
+
         return res.status(200).json({ contactArray });
     } catch (error) {
         console.log(error.message);
@@ -2013,13 +2017,49 @@ app.post('/api/contactsuggestion', Authentication, async (req, res) => {
     }
 })
 
+app.post('/api/friendstatus', Authentication, async (req, res) => {
+    try {
+        const { id } = req.body;
+        const user = req.user;
+
+        if (!id) {
+            return res.status(401).json({ message: 'id is empty' });
+        }
+
+        if (String(id) === String(user._id)) {
+            return res.status(200).json({ message: "Profile" })
+        }
+        const a = await Friends.findOne({ Sender: id, Receiver: user._id });
+        if (!a) {
+            const b = await Friends.findOne({ Sender: user._id, Receiver: id });
+            if (!b) {
+                return res.status(200).json({ message: "Add" })
+            }
+            return res.status(200).json({ message: b.Type === "Requested" ? "Cancel" : "Unfriend", Friendsid: b._id });
+
+        }
+        return res.status(200).json({ message: a.Type === "Requested" ? "Accept" : "Unfriend", Friendsid: a._id });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('Requests error')
+
+    }
+})
+
 app.post('/api/search', Authentication, async (req, res) => {
-    const { search } = req.body;
-    const regex = new RegExp(search, 'i');
-    const searchresult = await Users.find({
-        $or: [{ Name: regex }, { Institute: regex }]
-    });
-    res.status(200).json({ searchresult });
+    try {
+        const { search } = req.body;
+        const string = search.replace(/\\/g, "\\\\");
+        const regex = new RegExp(string, 'i');
+        const searchresult = await Users.find({
+            $or: [{ Name: regex }, { Institute: regex }]
+        });
+        res.status(200).json({ searchresult });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('error');
+
+    }
 })
 
 app.listen(port, () => {
