@@ -1,0 +1,9 @@
+######
+POST http://16.171.40.93:5000/api/quiz/questions/add
+Content-Type: application/json
+
+{
+    "question": "What is the capital of France?",
+    "options": ["Paris", "London", "Rome", "Madrid"],
+    "correctAnswer": "Paris"
+}
