@@ -239,6 +239,10 @@ app.post('/api/login', async (req, res, next) => {
             return res.status(404).send('User Not found');
         }
         const JWT_SECRET_KEY = process.env.JWT_SECRET;
+        const payload = {
+            id: userdetails._id,
+            Name: userdetails.Name
+        }
         jwt.sign(
             payload,
             JWT_SECRET_KEY,
@@ -250,9 +254,8 @@ app.post('/api/login', async (req, res, next) => {
                 }
             }
         )
-
     } catch (error) {
-        return res.status(500).send('Login Server Error!');
+        return res.status(500).send({ message: 'Login Server Error!', error: error.message });
 
     }
 })
