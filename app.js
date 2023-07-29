@@ -24,18 +24,18 @@ cloudinary.config({
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
-const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
+// const client = require('twilio')(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN)
 //Port
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 5000;
 //SERVICE ID TWILIO
-const SERVICE_ID = process.env.SERVICE_ID;
+// const SERVICE_ID = process.env.SERVICE_ID;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }))
 app.use(cors());
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
-    res.send('This is backend for skiti');
+    res.send('Backend for Skitii running...');
 })
 
 //Middleware 
