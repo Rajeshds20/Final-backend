@@ -2058,6 +2058,26 @@ app.post('/api/search', Authentication, async (req, res) => {
     }
 })
 
+app.post('/api/checkuser', async (req, res, next) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) {
+            return res.status(422).send('Not valid details')
+        }
+        const userdetails = await Users.findOne({ Phone: phone });
+        if (!userdetails) {
+            console.log('User Not found');
+            return res.status(404).send('User Not found');
+        }
+        return res.status(200).send('success')
+
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).send('Login Server Error!');
+
+    }
+})
+
 app.listen(port, () => {
     console.log(`server is running on port ${port}....`);
     scheduleSlotCreation();
